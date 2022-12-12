@@ -1,0 +1,7 @@
+{
+  "name": "user",
+  "version": "1.0.0",
+  "author": "Toan Le <toan.le@codeleap.de>",
+  "private": true,
+  "dependencies": {}
+}

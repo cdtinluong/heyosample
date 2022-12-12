@@ -1,0 +1,196 @@
+components:
+  requestBodies:
+      RevenueCat:
+        description: Mandatory body for web hook
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevenueCatRequest'
+  schemas:
+    # ENUM
+    TypeStatus:
+      type: string
+      enum: [TEST, INITIAL_PURCHASE, NON_RENEWING_PURCHASE, RENEWAL, PRODUCT_CHANGE, CANCELLATION, BILLING_ISSUE, SUBSCRIBER_ALIAS, SUBSCRIPTION_PAUSED, TRANSFER]
+    PeriodType:
+      type: string
+      enum: [TRIAL, INTRO, NORMAL, PROMOTIONAL]
+    Environment:
+      type: string
+      enum: [PRODUCTION, SANDBOX]
+    CancelReason:
+      type: string
+      enum: ['UNSUBSCRIBE', 'BILLING_ERROR', 'DEVELOPER_INITIATED', 'PRICE_INCREASE', 'CUSTOMER_SUPPORT', 'UNKNOWN']
+    ExpirationReason:
+      type: string
+      enum: ['UNSUBSCRIBE', 'BILLING_ERROR', 'DEVELOPER_INITIATED', 'PRICE_INCREASE', 'CUSTOMER_SUPPORT', 'UNKNOWN']
+    # REQUEST BODY
+    RevenueCatRequest:
+      type: object
+      properties:
+        api_version:
+          type: string
+          example: '1.0'
+        event:
+          type: object
+          properties:
+            aliases:
+              type: array
+              items:
+                type: string
+              example:
+                - yourCustomerAliasedID
+                - yourCustomerAliasedID
+            app_user_id:
+              type: string
+              example: 'yourCustomerAppUserID'
+            app_id:
+              type: string
+              example: 'yourAppID'
+            commission_percentage: 
+              type: number
+              nullable: true
+              example: 1.7
+            country_code:
+              type: string
+              nullable: true
+              example: 'US'
+            currency:
+              type: string
+              example: 'USD'
+              nullable: true
+            entitlement_id:
+              type: string
+              nullable: true
+              example: 'pro_cat'
+            entitlement_ids:
+              type: array
+              nullable: true
+              items:
+                type: string
+              example:
+                - pro_cat
+            environment:
+              $ref: '#/components/schemas/Environment'
+              example: 'PRODUCTION'
+            event_timestamp_ms:
+              type: integer
+              example: 1591121855319
+            expiration_at_ms:
+              type: integer
+              nullable: true
+              example: 1591726653000
+            id:
+              type: string
+              example: 'UniqueIdentifierOfEvent'
+            is_family_share:
+              type: boolean
+              nullable: true
+              example: false
+            offer_code:
+              type: string
+              example: 'free_month'
+              nullable: true
+            original_app_user_id:
+              type: string
+              example: 'OriginalAppUserID'
+              nullable: true
+            original_transaction_id:
+              type: string
+              example: '1530648507000'
+              nullable: true
+            period_type:
+              $ref: '#/components/schemas/PeriodType'
+              example: 'NORMAL'
+            presented_offering_id:
+              type: string
+              nullable: true
+              example: 'OfferingID'
+            price:
+              type: number
+              example: 2.49
+              nullable: true
+            price_in_purchased_currency:
+              type: number
+              example: 2.49
+              nullable: true
+            product_id:
+              type: string
+              nullable: true
+              example: 'onemonth_no_trial'
+            purchased_at_ms:
+              type: integer
+              nullable: true
+              example: 1591121853000
+            store:
+              $ref: '../lincloud.yml#/components/schemas/Store'
+              example: 'APP_STORE'
+            subscriber_attributes:
+              type: object
+              example: {
+                      '$Favorite Cat': {
+                        'updated_at_ms': 1581121853000,
+                        'value': 'Garfield'
+                      }
+                    }
+            takehome_percentage:
+              type: number
+              example: 0.7
+              nullable: true
+            transaction_id:
+              type: string
+              nullable: true
+              example: '170000869511114'
+            type:
+              $ref: '#/components/schemas/TypeStatus'
+              example: 'INITIAL_PURCHASE'
+            grace_period_expiration_at_ms:
+              type: integer
+              nullable: true
+              example: 10
+              additionalProperties: true
+            auto_resume_at_ms:
+              type: integer
+              nullable: true
+              example: 1591726653000
+              additionalProperties: true
+            is_trial_conversion:
+              type: boolean
+              nullable: true
+              example: false
+              additionalProperties: true
+            cancel_reason:
+              $ref: '#/components/schemas/CancelReason'
+              example: 'UNKNOWN'
+              additionalProperties: true
+              nullable: true
+            expiration_reason:
+              $ref: '#/components/schemas/ExpirationReason'
+              example: 'UNSUBSCRIBE'
+              additionalProperties: true
+              nullable: true
+            new_product_id:
+              type: string
+              example: '170000869511114'
+              additionalProperties: true
+              nullable: true
+            tax_percentage:
+              type: number
+              example: 0.1
+              nullable: true
+            transferred_from:
+              type: array
+              items:
+                type: string
+              example:
+                - 170000
+              additionalProperties: true
+              nullable: true
+            transferred_to:
+              type: array
+              items:
+                type: string
+              example: 
+                - 170000
+              additionalProperties: true
+              nullable: true

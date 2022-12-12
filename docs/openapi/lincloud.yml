@@ -1,0 +1,1488 @@
+openapi: 3.0.1
+info:
+  title: LinCloud API
+  version: '1.0'
+  description: LinCloud API to be used by SDK and Web App
+  contact:
+    name: Pierrick Libert
+    email: pierrick.libert@codeleap.de
+  license:
+    name: UNLICENSED
+servers:
+  - url: 'https://dev.cloud.linearity.io'
+    description: Development Server
+  - url: 'https://stg.cloud.linearity.io'
+    description: Staging Server
+  - url: 'https://cloud.linearity.io'
+    description: Production Server
+
+x-amazon-apigateway-request-validators:
+  all:
+    validateRequestBody: true
+    validateRequestParameters: true
+  body-only:
+    validateRequestBody: true
+    validateRequestParameters: false
+  params-only:
+    validateRequestBody: false
+    validateRequestParameters: true
+
+x-amazon-apigateway-cors:
+  allowOrigins:
+    - '*'
+  allowCredientials: true
+  allowHeaders:
+    - '*'
+  allowMethods:
+    - '*'
+
+x-amazon-apigateway-gateway-responses:
+  ACCESS_DENIED:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  API_CONFIGURATION_ERROR:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  AUTHORIZER_CONFIGURATION_ERROR:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  AUTHORIZER_FAILURE:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  BAD_REQUEST_PARAMETERS:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  BAD_REQUEST_BODY:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  DEFAULT_4XX:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  DEFAULT_5XX:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  EXPIRED_TOKEN:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  INTEGRATION_FAILURE:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  INTEGRATION_TIMEOUT:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  INVALID_API_KEY:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  INVALID_SIGNATURE:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  MISSING_AUTHENTICATION_TOKEN:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  QUOTA_EXCEEDED:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  REQUEST_TOO_LARGE:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  RESOURCE_NOT_FOUND:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  THROTTLED:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  UNAUTHORIZED:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  UNSUPPORTED_MEDIA_TYPE:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+  WAF_FILTERED:
+    responseTemplates:
+      application/json: '{"message": "$context.error.message", "code": "$context.error.responseType"}'
+
+components:
+  securitySchemes:
+    defaultUserPool:
+      type: apiKey
+      name: Authorization
+      in: header
+      x-amazon-apigateway-authtype: cognito_user_pools
+      x-amazon-apigateway-authorizer:
+        type: cognito_user_pools
+        providerARNs:
+          - value_to_be_replaced_here
+    revenueCatAuthorizer:
+      type: apiKey
+      name: Authorization
+      in: header
+      x-amazon-apigateway-authorizer:
+        type: token
+        identityValidationExpression : value_regex_to_be_here
+        authorizerResultTtlInSeconds : 60
+  parameters:
+    DefaultIDPath:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: ID of a resource
+      example: 97dbee6a-270f-4bda-963a-623dc90695e7
+    DeviceIdHeader:
+      in: header
+      name: x-device-id
+      required: true
+      schema:
+        type: string
+        pattern: '[0-9a-zA-Z\-]+'
+      description: Device ID from where the request is coming from
+      example: device213ABC
+    PaginationQuery:
+      in: query
+      name: page
+      required: true
+      schema:
+        $ref: '#/components/schemas/Pagination'
+      description: Used for pagination
+      example: 1
+    NextPageQuery:
+      in: query
+      name: token
+      required: false
+      schema:
+        $ref: '#/components/schemas/NextToken'
+      description: Used for pagination
+      example: dGVzdGNvZGVsZWFw
+    LastUpdatedQuery:
+      in: query
+      name: lastUpdated
+      required: true
+      schema:
+        $ref: '#/components/schemas/DateFullString'
+      description: lasted update from user in iso8601 format
+      example: 2022-11-05 00:35:04.894+00
+    RevenueCatAuthorizationHeader:
+      in: header
+      name: Authorization
+      required: true
+      schema:
+        type: string
+        pattern: place_value_to_be_here
+      description: RevenueCat Authorize token
+      example: Basic token
+  responses:
+    Success:
+      description: An object with a generic message for successful request
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    type: object
+          examples:
+            GetHealth:
+              summary: GET Health
+              value:
+                message: Healthy
+                code: PING
+                data: {}
+            PostAuthLogin:
+              summary: POST Authentication Login
+              value:
+                message: Login successful
+                code: AUTH_LOGIN
+                data: {}
+            PostAuthLogout:
+              summary: POST Authentication Logout
+              value:
+                message: Logout successful
+                code: AUTH_LOGOUT
+                data: {}
+            DeleteUser:
+              summary: DELETE User
+              value:
+                message: User deleted
+                code: USER_DELETED
+                data: {}
+            PostUserRecover:
+              summary: POST User Recovery
+              value:
+                message: User recovered
+                code: USER_RECOVERED
+                data: {}
+            PatchUserMigration:
+              summary: PATCH User Migration
+              value:
+                message: User migration updated
+                code: USER_MIGRATION_UPDATED
+                data: {}
+            PostFileUploadAbort:
+              summary: POST File Upload Abort
+              value:
+                message: Uploading aborted
+                code: FILE_UPLOAD_ABORTED
+                data: {}
+            PostFileConflictResolve:
+              summary: POST File Conflict Resolve
+              value:
+                message: File resolved
+                code: FILE_CONFLICT_RESOLVED
+                data: {}
+            DeleteFileContent:
+              summary: DELETE File Content
+              value:
+                message: File content deleted
+                code: FILE_CONTENT_DELETED
+                data: {}
+    BadRequest:
+      description: An object with the details of the bad parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BodyGeneral'
+          examples:
+            Parameters:
+              summary: Bad Request Parameters
+              value:
+                message: Default API Gateway message
+                code: BAD_REQUEST_PARAMETERS
+            Body:
+              summary: Bad Request Body
+              value:
+                message: Default API Gateway message
+                code: BAD_REQUEST_BODY
+            GetUser:
+              summary: GET User
+              value:
+                message: User is already active
+                code: USER_ACTIVE
+            PostHierarchy:
+              summary: POST Hierarchy
+              value:
+                message: Parent hierarchy not found
+                code: HIERARCHY_PARENT_NOT_FOUND
+            PatchHierarchy:
+              summary: PATCH Hierarchy
+              value:
+                message: Filename can not empty
+                code: FILE_NAME_INVALID
+            PostHierarchyRecover:
+              summary: POST Hierarchy Recover
+              value:
+                message: The parent folder was deleted preventing the recovering to happen
+                code: HIERARCHY_PARENT_NOT_FOUND
+            GetPolling:
+              summary: GET Polling
+              value:
+                message: 'Invalid lastUpdated iso UTC date, got: ${lastUpdated}'
+                code: POLLING_FAILED
+    Unauthorized:
+      description: An object requesting a token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BodyGeneral'
+          examples:
+            Unauthorized:
+              summary: Invalid token
+              value:
+                message: Default API Gateway message
+                code: UNAUTHORIZED
+            PostAuthLogin:
+              summary: POST Authentication Login
+              value:
+                message: Your account is pending on deletion
+                code: USER_PENDING_DELETION
+            PostAuthLogout:
+              summary: POST Authentication Logout
+              value:
+                message: Your account is pending on deletion
+                code: USER_PENDING_DELETION
+            DeleteUser:
+              summary: DELETE User
+              value:
+                message: User is not active
+                code: USER_PENDING_DELETION
+            GetUser:
+              summary: GET User
+              value:
+                message: User is not active
+                code: USER_PENDING_DELETION
+            PatchUser:
+              summary: PATCH User
+              value:
+                message: User is not active
+                code: USER_PENDING_DELETION
+            GetUserHistory:
+              summary: GET User History
+              value:
+                message: User is not active
+                code: USER_PENDING_DELETION
+    Forbidden:
+      description: An object with the details of the resource is forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BodyGeneral'
+          examples:
+            PostFileUpload:
+              summary: POST File Upload
+              value:
+                message: File size exceeded
+                code: FILE_SIZE_EXCEEDED
+            PostHierarchy:
+              summary: POST Hierarchy
+              value:
+                message: Must create preset in root folder
+                code: PRESET_CREATE_FAILED
+            PostHierarchyBatch:
+              summary: POST Hierarchy Batch
+              value:
+                message: Must create preset in root folder
+                code: PRESET_CREATE_FAILED
+    NotFound:
+      description: An object with the details of the resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BodyGeneral'
+          examples:
+            AuthLogin:
+              summary: POST Authentication Login
+              value:
+                message: User not found
+                code: USER_NOT_FOUND
+            AuthLogout:
+              summary: POST Authentication Logout
+              value:
+                message: User not found
+                code: USER_NOT_FOUND
+            DeleteUser:
+              summary: DELETE User
+              value:
+                message: User not found
+                code: USER_NOT_FOUND
+            GetUser:
+              summary: GET User
+              value:
+                message: User not found
+                code: USER_NOT_FOUND
+            PathUser:
+              summary: PATCH User
+              value:
+                message: User not found
+                code: USER_NOT_FOUND
+            RecoverUser:
+              summary: POST User Recovery
+              value:
+                message: User not found
+                code: USER_NOT_FOUND
+            GetUserHistory:
+              summary: GET User History
+              value:
+                message: User not found
+                code: USER_NOT_FOUND
+            PostFileDowndload:
+              summary: POST File Downdload
+              value:
+                message: File contents not found
+                code: FILE_CONTENT_NOT_FOUND
+            PostFileUpload:
+              summary: POST File Upload
+              value:
+                message: File not found
+                code: FILE_NOT_FOUND
+            PostFileUploadComplete:
+              summary: POST File Upload Complete
+              value:
+                message: File not found
+                code: FILE_NOT_FOUND
+            PostFileUploadAbort:
+              summary: POST File Upload Abort
+              value:
+                message: File not found
+                code: FILE_NOT_FOUND
+            GetFile:
+              summary: GET File
+              value:
+                message: File not found
+                code: FILE_NOT_FOUND
+            PostFileConflictResolve:
+              summary: POST File Conflict Resolve
+              value:
+                message: File not found
+                code: FILE_NOT_FOUND
+            DeleteFileContent:
+              summary: DELETE File Content
+              value:
+                message: File content not found
+                code: FILE_CONTENT_NOT_FOUND
+            PostHierarchy:
+              summary: POST Hierarchy
+              value:
+                message: User not found
+                code: USER_NOT_FOUND
+            PatchHierarchyUser:
+              summary: PATCH Hierarchy User Not Found
+              value:
+                message: User not found
+                code: USER_NOT_FOUND
+            PatchHierarchyHierarchy:
+              summary: PATCH Hierarchy Not Found
+              value:
+                message: Hierarchy not found
+                code: HIERARCHY_NOT_FOUND
+            GetHierarchyListOwnerUser:
+              summary: GET Hierarchy List Owner User Not Found
+              value:
+                message: User not found
+                code: USER_NOT_FOUND
+            GetHierarchyListOwnerHierarchy:
+              summary: GET Hierarchy List Owner Hierarchy Not Found
+              value:
+                message: Hierarchy not found
+                code: HIERARCHY_NOT_FOUND
+            DeleteHierarchy:
+              summary: DELETE Hierarchy
+              value:
+                message: Hierarchy not found
+                code: HIERARCHY_NOT_FOUND
+            PostHierarchyRecoverUser:
+              summary: POST Hierarchy Recover User Not Found
+              value:
+                message: User not found
+                code: USER_NOT_FOUND
+            PostHierarchyRecoverHierarchy:
+              summary: POST Hierarchy Recover Hierarchy Not Found
+              value:
+                message: Hierarchy not found
+                code: HIERARCHY_NOT_FOUND
+            DeleteHierarchyPermanently:
+              summary: DELETE Hierarchy Permanently
+              value:
+                message: Hierarchy not found
+                code: HIERARCHY_NOT_FOUND
+            PostHierarchyBatch:
+              summary: POST Hierarchy Batch
+              value:
+                message: User not found
+                code: USER_NOT_FOUND
+            GetPlan:
+              summary: GET Plan
+              value:
+                message: Plan not found
+                code: PLAN_NOT_FOUND
+            GetUserPlan:
+              summary: GET User Plan
+              value:
+                message: User plan not found
+                code: USER_PLAN_NOT_FOUND
+    Duplicated:
+      description: An object describing the duplicated resource in DB
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BodyGeneral'
+          examples:
+            PostHierarchy:
+              summary: POST Hierarchy
+              value:
+                message: Duplicated name
+                code: HIERARCHY_DUPLICATED
+            PatchHierarchyName:
+              summary: PATCH Hierarchy Duplicated Name
+              value:
+                message: Duplicated name
+                code: HIERARCHY_DUPLICATED
+            PatchHierarchySync:
+              summary: PATCH Hierarchy Synchronization
+              value:
+                message: Hierarchy requires synchronization
+                code: HIERARCHY_REQUIRES_SYNC
+            PostHierarchyRecover:
+              summary: POST Hierarchy Recover
+              value:
+                message: Hierarchy already exists and cannot be recovered
+                code: HIERARCHY_DUPLICATED
+    InternalError:
+      description: An object with a generic message
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BodyGeneral'
+          examples:
+            IntegrationFailure:
+              summary: Integration Failure
+              value:
+                message: Default API Gateway message
+                code: INTEGRATION_FAILURE
+
+  schemas:
+    # ENUM:
+    FileType:
+      type: string
+      enum: [vectornator, animator, preset]
+      example: vectornator
+    Store:
+      type: string
+      enum: [AMAZON, APP_STORE, MAC_APP_STORE, PLAY_STORE, PROMOTIONAL, STRIPE]
+      example: APP_STORE
+    # RESPONSE
+    BodyGeneral:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          oneOf:
+            - $ref: '#/components/schemas/AWSCode'
+            - $ref: '#/components/schemas/CustomCode'
+      example:
+        message: Default message
+        code: DEFAULT_CODE
+    # GENERIC
+    Pagination:
+      type: number
+      minimum: 1
+      example: 1
+    NextToken:
+      type: string
+      format: byte # base64 encoded string
+      example: dGVzdGNvZGVsZWFw
+    UUID:
+      type: string
+      format: uuid
+      example: 97dbee6a-270f-4bda-963a-623dc90695e7
+    # HTTP CODE ENUM
+    AWSCode:
+      type: string
+      enum: [ACCESS_DENIED, API_CONFIGURATION_ERROR, AUTHORIZER_CONFIGURATION_ERROR, AUTHORIZER_FAILURE, BAD_REQUEST_PARAMETERS, BAD_REQUEST_BODY, DEFAULT_4XX, DEFAULT_5XX, EXPIRED_TOKEN, INTEGRATION_FAILURE, INTEGRATION_TIMEOUT, INVALID_API_KEY, INVALID_SIGNATURE, MISSING_AUTHENTICATION_TOKEN, QUOTA_EXCEEDED, REQUEST_TOO_LARGE, RESOURCE_NOT_FOUND, THROTTLED, UNAUTHORIZED, UNSUPPORTED_MEDIA_TYPE, WAF_FILTERED]
+      example: ACCESS_DENIED
+    CustomCode:
+      type: string
+      enum: [
+        AUTH_LOGIN,
+        AUTH_LOGOUT,
+        FILE_UPLOAD_COMPLETED,
+        FILE_UPLOAD_ABORTED,
+        FILE_NOT_FOUND,
+        FILE_CONTENT_NOT_FOUND,
+        FILE_CONTENT_DELETED,
+        FILE_NAME_INVALID,
+        FILE_CONFLICT_RESOLVED,
+        FILE_CONFLICT_RETRIEVED,
+        FILE_SIZE_EXCEEDED,
+        FILE_SIZE_INVALID,
+        HIERARCHY_DUPLICATED,
+        HIERARCHY_NOT_FOUND,
+        HIERARCHY_PARENT_NOT_FOUND,
+        HIERARCHY_CREATED,
+        HIERARCHY_RENAMED,
+        HIERARCHY_RETRIEVED,
+        HIERARCHY_DELETED,
+        HIERARCHY_RECOVERED,
+        HIERARCHY_PERMANENTLY_DELETED,
+        HIERARCHY_SHARED_LIST_RETRIEVED,
+        HIERARCHY_TRASHED_LIST_RETRIEVED,
+        HIERARCHY_OWNER_LIST_RETRIEVED,
+        PRESET_LIST_RETRIEVED,
+        USER_CREATED,
+        USER_UPDATED,
+        USER_DELETED,
+        USER_RECOVERED,
+        USER_NOT_FOUND,
+        USER_ACTIVE,
+        USER_PENDING_DELETION,
+        USER_PLAN_NOT_FOUND,
+        USER_PLAN_RETRIEVED,
+        USER_PLAN_HISTORY_RETRIEVED,
+      ]
+      example: AUTH_LOGIN
+    # REGEX
+    FolderRegex:
+      type: string
+      pattern: '^(?:\/[^:\/\n\r\v]+)*\/$'
+      example: '/root/sub'
+    ContentFilenameRegex:
+      type: string
+      pattern: '^[^:\/\n\r\v]+\.(jpe?g|png|json|dat){1}$'
+      example: 'media.dat'
+    FileSizeRegex:
+      type: string
+      pattern: '^[0-9]+$'
+      example: '123'
+    FilenameRegex:
+      type: string
+      pattern: '^[^:\/\n\r\v]+\.(vectornator|animator){1}$'
+      example: 'file_1.vectornator'
+    HierarchyRegex:
+      type: string
+      pattern: '^(?:\/[^:\/\n\r\v]+)*\/([^:\/\n\r\v]+\.(vectornator|animator){1})*$'
+      example: '/root/sub/file.vectornator'
+    DateFullString:
+      type: string
+      format: date-time # iso date format
+      example: '2022-10-20T18:09:58.282Z'
+
+tags:
+  - name: Auth
+  - name: File
+  - name: Health Check
+  - name: Hierarchy
+  - name: Plan
+  - name: Polling
+  - name: User
+  - name: Webhook
+
+paths:
+  # HEALTH CHECK
+  /health:
+    get:
+      operationId: get-health
+      summary: GET Health
+      description: Endpoint to check the health of the API
+      tags:
+        - Health Check
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: mock
+        passthroughBehavior: when_no_match
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: '{"message": "Healthy", "code": "PING", "data": {} }'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+  # AUTH
+  /auth/login:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+    post:
+      operationId: post-auth-login
+      summary: POST login
+      description: Logs the information of a new device logging in with a user's account
+      tags:
+        - Auth
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_AUTH_LOGIN
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /auth/logout:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+    post:
+      operationId: post-auth-logout
+      summary: POST logout
+      description: Logs the information of a new device logging out with a user's account
+      tags:
+        - Auth
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_AUTH_LOGOUT
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  # USER
+  /user:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+    delete:
+      operationId: delete-user
+      summary: DELETE User
+      description: Allows the user to request the deletion of his account
+      tags:
+        - User
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: DELETE
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_DELETE_USER
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: patch-user
+      summary: UPDATE user
+      description: Allows the user to update his own account
+      tags:
+        - User
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: PATCH
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_PATCH_USER
+      x-amazon-apigateway-request-validator: all
+      requestBody:
+        $ref: './components/user.yml#/components/requestBodies/PatchUser'
+      responses:
+        200:
+          $ref: './components/user.yml#/components/responses/GetUser'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+    get:
+      operationId: get-user
+      summary: GET User
+      description: Allows the user to request his profile
+      tags:
+        - User
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_GET_USER
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/user.yml#/components/responses/GetUser'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /user/recover:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+    post:
+      operationId: post-user-recover
+      summary: RECOVER User
+      description: Allows the user to request to recover his account
+      tags:
+        - User
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_RECOVER_USER
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /user/history:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+    get:
+      operationId: get-user-history
+      summary: GET User History
+      description: Allows the user to request his actions
+      tags:
+        - User
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_GET_USER_HISTORY
+      x-amazon-apigateway-request-validator: all
+      parameters:
+        - $ref: '#/components/parameters/PaginationQuery'
+      responses:
+        200:
+          $ref: './components/user.yml#/components/responses/GetUserHistory'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /user/migration:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+    patch:
+      operationId: patch-user-migration
+      summary: PATCH User Migration Status
+      description: Allows the sdk to update user migration status
+      tags:
+        - User
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: PATCH
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_UPDATE_USER_MIGRATION_STATUS
+      x-amazon-apigateway-request-validator: all
+      requestBody:
+        $ref: './components/user.yml#/components/requestBodies/PatchUserMigration'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+  /user/plan:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+    get:
+      operationId: get-user-plan
+      summary: GET User Plan
+      description: Allows the sdk to get user plan
+      tags:
+        - User
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_GET_USER_PLAN
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/user.yml#/components/responses/GetUserPlan'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /user/plan/history:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+    get:
+      operationId: get-user-plan-history
+      summary: GET User Plan History
+      description: Allows the sdk to get user plan history
+      tags:
+        - User
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_GET_USER_PLAN_HISTORY
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/user.yml#/components/responses/GetUserPlans'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+  # FILE
+  /file/{fileId}/download:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/file.yml#/components/parameters/FileIDPath'
+    post:
+      operationId: post-file-download
+      summary: POST File Download
+      description: Allows the user to request pre-signed URLs to download their files
+      tags:
+        - File
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_DOWNLOAD_FILE
+      x-amazon-apigateway-request-validator: all
+      requestBody:
+        $ref: './components/file.yml#/components/requestBodies/PostFileDownload'
+      responses:
+        200:
+          $ref: './components/file.yml#/components/responses/PostFileDownload'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /file/{fileId}/upload:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/file.yml#/components/parameters/FileIDPath'
+    post:
+      operationId: post-file-upload
+      summary: POST File Upload
+      description: Allows the user to request pre-signed URLs to upload their files
+      tags:
+        - File
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_UPLOAD_FILE
+      x-amazon-apigateway-request-validator: all
+      requestBody:
+        $ref: './components/file.yml#/components/requestBodies/PostFileUpload'
+      responses:
+        200:
+          $ref: './components/file.yml#/components/responses/PostFileUpload'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        403:
+          $ref: '#/components/responses/Forbidden'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /file/{fileId}/upload/complete:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/file.yml#/components/parameters/FileIDPath'
+    post:
+      operationId: post-file-upload-complete
+      summary: POST File Complete Upload
+      description: Allows the user to complete uploading file
+      tags:
+        - File
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_COMPLETE_UPLOAD_FILE
+      x-amazon-apigateway-request-validator: all
+      requestBody:
+        $ref: './components/file.yml#/components/requestBodies/PostFileUploadComplete'
+      responses:
+        200:
+          $ref: './components/file.yml#/components/responses/PostFileUploadComplete'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /file/{fileId}/upload/abort:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/file.yml#/components/parameters/FileIDPath'
+    post:
+      operationId: post-file-upload-abort
+      summary: POST File Abort Upload
+      description: Allows the user to abort uploading file
+      tags:
+        - File
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_ABORT_UPLOAD_FILE
+      x-amazon-apigateway-request-validator: all
+      requestBody:
+        $ref: './components/file.yml#/components/requestBodies/PostFileUploadAbort'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /file/{fileId}:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/file.yml#/components/parameters/FileIDPath'
+    get:
+      operationId: get-file
+      summary: GET File info
+      description: Allows the user to get file info
+      tags:
+        - File
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_GET_FILE_INFO
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/file.yml#/components/responses/GetFile'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /file/{fileId}/conflict/resolve:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/file.yml#/components/parameters/FileIDPath'
+    post:
+      operationId: post-file-resolve-conflict
+      summary: POST File Resolve Conflict
+      description: Allows the user to resolve file conflict
+      tags:
+        - File
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_FILE_CONFLICT_RESOLVE
+      x-amazon-apigateway-request-validator: all
+      requestBody:
+        $ref: './components/file.yml#/components/requestBodies/PostFileResolveConflict'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /file/{fileId}/content/{fileContentId}:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/file.yml#/components/parameters/FileIDPath'
+      - $ref: './components/file.yml#/components/parameters/FileContentIDPath'
+    delete:
+      operationId: delete-file-content
+      summary: DELETE File Content
+      description: Allows the user to delete a file content
+      tags:
+        - File
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: DELETE
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_DELETE_FILE_CONTENT
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /file/{fileId}/conflict:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/file.yml#/components/parameters/FileIDPath'
+    get:
+      operationId: get-file-conflict
+      summary: GET File conflict
+      description: Allows the user to get conflicted file contents 
+      tags:
+        - File
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_GET_FILE_INFO
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/file.yml#/components/responses/GetFileConflict'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  # HIERARCHY
+  /hierarchy:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+    post:
+      operationId: post-hierarchy
+      summary: CREATE Hierarchy
+      description: Allows the user to create hierarchy
+      tags:
+        - Hierarchy
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_CREATE_HIERARCHY
+      x-amazon-apigateway-request-validator: all
+      requestBody:
+        $ref: './components/hierarchy.yml#/components/requestBodies/PostHierarchy'
+      responses:
+        201:
+          $ref: './components/hierarchy.yml#/components/responses/PostHierarchy'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+        409:
+          $ref: '#/components/responses/Duplicated'
+    patch:
+      operationId: patch-hierarchy
+      summary: PATCH Hierarchy
+      description: Allows the user to rename hierarchy
+      tags:
+        - Hierarchy
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: PATCH
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_RENAME_HIERARCHY
+      x-amazon-apigateway-request-validator: all
+      requestBody:
+        $ref: './components/hierarchy.yml#/components/requestBodies/PatchHierarchy'
+      responses:
+        200:
+          $ref: './components/hierarchy.yml#/components/responses/PatchHierarchy'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+        409:
+          $ref: '#/components/responses/Duplicated'
+  /hierarchy/batch:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+    post:
+      operationId: post-batch-hierarchy
+      summary: CREATE batch Hierarchy
+      description: Allows the user to create a batch Hierarchy
+      tags:
+        - Hierarchy
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_CREATE_BATCH_FILE_FOLDER
+      x-amazon-apigateway-request-validator: all
+      requestBody:
+        $ref: './components/hierarchy.yml#/components/requestBodies/PostHierarchyBatch'
+      responses:
+        200:
+          $ref: './components/hierarchy.yml#/components/responses/PostHierarchyBatch'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /hierarchy/list/owner:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/hierarchy.yml#/components/parameters/HierarchyIDQuery'
+    get:
+      operationId: get-hierarchy-list-owner
+      summary: GET Hierarchy Owner List 
+      description: Allows the user to get his own list of hierarchies
+      tags:
+        - Hierarchy
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_GET_OWNER_HIERARCHIES
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/hierarchy.yml#/components/responses/GetHierarchyList'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /hierarchy/list/shared:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/hierarchy.yml#/components/parameters/HierarchyIDQuery'
+    get:
+      operationId: get-hierarchy-list-shared
+      summary: GET Hierarchy Shared List
+      description: Allows the user to get hierarchies shared with him
+      tags:
+        - Hierarchy
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_GET_SHARED_HIERARCHIES
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/hierarchy.yml#/components/responses/GetHierarchyList'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+  /hierarchy/list/trashed:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+    get:
+      operationId: get-hierarchy-list-trashed
+      summary: GET Hierarchy Trashed List
+      description: Allows the user to get his list of trashed hierarchies
+      tags:
+        - Hierarchy
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_GET_TRASHED_HIERARCHIES
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/hierarchy.yml#/components/responses/GetHierarchyListTrashed'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+  /hierarchy/list/preset:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+    get:
+      operationId: get-preset-list
+      summary: GET Preset List 
+      description: Allows the user to get his presets
+      tags:
+        - Hierarchy
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_GET_PRESETS
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/hierarchy.yml#/components/responses/GetPresetList'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+  /hierarchy/{hierarchyId}:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/hierarchy.yml#/components/parameters/HierarchyIDPath'
+    delete:
+      operationId: delete-hierarchy
+      summary: DELETE Hierarchy
+      description: Allows the user to delete a list of hierarchy
+      tags:
+        - Hierarchy
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: DELETE
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_DELETE_HIERARCHY
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/hierarchy.yml#/components/responses/DeleteHierarchy'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /hierarchy/{hierarchyId}/permanent:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/hierarchy.yml#/components/parameters/HierarchyIDPath'
+    delete:
+      operationId: delete-hierarchy-permanently
+      summary: DELETE Hierarchy permanently
+      description: Allows the user to delete a list of hierarchy permanently
+      tags:
+        - Hierarchy
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: DELETE
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_DELETE_HIERARCHY_PERMANENTLY
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/hierarchy.yml#/components/responses/DeleteHierarchy'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /hierarchy/{hierarchyId}/recover:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/hierarchy.yml#/components/parameters/HierarchyIDPath'
+    post:
+      operationId: post-hierarchy-recover
+      summary: POST Recover Hierarchy
+      description: Allows the user to recover a list of hierarchies
+      tags:
+        - Hierarchy
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-request-validator: all
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_POST_RECOVER_HIERARCHY
+      responses:
+        200:
+          $ref: './components/hierarchy.yml#/components/responses/PostHierarchyRecover'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+  # POLLING
+  /polling:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: '#/components/parameters/LastUpdatedQuery'
+      - $ref: '#/components/parameters/NextPageQuery'
+    get:
+      operationId: get-polling
+      summary: GET the latest updates
+      description: Get the changes from lasted update
+      tags:
+        - Polling
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_GET_POLLING
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/polling.yml#/components/responses/GetPolling'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'  
+
+  # WEBHOOK
+  /webhook/revenuecat:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/RevenueCatAuthorizationHeader'
+      operationId: post-webhook-revenuecat
+      summary: Webhook revenuecat
+      description: Webhook from RevenueCat
+      tags:
+        - RevenueCat
+      x-amazon-apigateway-integration:
+        httpMethod: POST
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_POST_WEBHOOK_REVENUECAT
+      x-amazon-apigateway-request-validator: all
+      requestBody:
+        $ref: './components/revenuecat.yml#/components/requestBodies/RevenueCat'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  # PLAN
+  /plan/{store}/list:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/plan.yml#/components/parameters/StorePath'
+    get:
+      operationId: get-plan-list
+      summary: GET Plan List
+      description: Get the list of active plans
+      tags:
+        - Plan
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_GET_PLANS
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/plan.yml#/components/responses/GetPlanList'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+  /plan/{store}/{planOrExternalId}:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdHeader'
+      - $ref: './components/plan.yml#/components/parameters/StorePath'
+      - $ref: './components/plan.yml#/components/parameters/PlanOrExternalIDPath'
+    get:
+      operationId: get-plan
+      summary: GET Plan by ID
+      description: Get a specific plan by its ID or external ID
+      tags:
+        - Plan
+      security:
+        - defaultUserPool: []
+      x-amazon-apigateway-integration:
+        httpMethod: GET
+        type: aws_proxy
+        uri: LAMBDA_INVOCATION_ARN_GET_PLAN
+      x-amazon-apigateway-request-validator: all
+      responses:
+        200:
+          $ref: './components/plan.yml#/components/responses/GetPlan'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound' 

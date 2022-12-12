@@ -1,0 +1,111 @@
+{
+  "name": "lin-cloud",
+  "version": "1.0.0",
+  "description": "lin.cloud backend",
+  "main": "index.js",
+  "repository": "git@bitbucket.org:codeleap/backend.git",
+  "author": "Luc <luc.duong@codeleap.de>",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/functions/*",
+      "packages/layers/core/nodejs",
+      "packages/layers/prisma/nodejs",
+      "packages/layers/file/nodejs",
+      "packages/cdk",
+      "packages/cdk/stacks/resource/scripts/*",
+      "packages/tools",
+      "e2e"
+    ],
+    "nohoist": [
+      "**"
+    ]
+  },
+  "scripts": {
+    "init:cz": "commitizen init cz-conventional-changelog --save-dev --save-exact --force",
+    "ci": "yarn install --immutable --immutable-cache --check-cache && yarn openapi:merge",
+    "postinstall": "husky install && yarn workspace tools create:handler:index",
+    "lint": "eslint 'packages/**/*.ts'",
+    "lint:fix": "eslint 'packages/**/*.ts' --fix",
+    "prettier:write": "prettier --config .prettierrc --ignore-path=.prettierignore --write **/*.ts",
+    "test": "jest --runInBand",
+    "test:cov": "jest --coverage --runInBand",
+    "preserve": "yarn workspace tools create:handler:index",
+    "serve": "sam local start-api --env-vars ./env.json -t ./packages/cdk/cdk.out/App.template.json",
+    "serve:warm": "yarn serve --warm-containers EAGER",
+    "prisma:generate": "yarn workspace @layers/prisma prisma generate",
+    "prisma:migrate": "yarn workspace @layers/prisma migrate:dev",
+    "prisma:deploy": "yarn workspace @layers/prisma prisma migrate deploy",
+    "synth": "yarn workspace cdk cdk synth",
+    "provision:local": "docker-compose --project-name=lin-cloud --file=provision/local/docker-compose.yaml  up -d",
+    "openapi:merge": "openapi-merger -i docs/openapi/lincloud.yml -o docs/lincloud.yml",
+    "deploy:app": "yarn workspace cdk cdk deploy App*",
+    "deploy:app:pre": "yarn workspace --silent cdk run --silent deploy:app:pre",
+    "deploy:app:post": "yarn workspace cdk deploy:app:post",
+    "deploy:cross-region": "yarn workspace cdk cdk deploy CrossRegion*",
+    "deploy:resource": "yarn workspace cdk cdk deploy Resource",
+    "deploy:peering": "yarn workspace cdk cdk deploy Peering*",
+    "deploy:peering:post": "yarn workspace cdk deploy:peering:post",
+    "nullable": "node --unhandled-rejections=strict -r ts-node/register -r tsconfig-paths/register packages/cdk/bin/nullable.ts",
+    "claim-token": "./packages/tools/create-user-or-get-token.sh",
+    "test:e2e": "yarn workspace e2e test"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-ec2": "^3.214.0",
+    "@aws-sdk/client-s3": "3.163.0",
+    "@aws-sdk/s3-request-presigner": "3.163.0",
+    "@aws-sdk/signature-v4-crt": "3.163.0",
+    "@commitlint/cli": "^17.1.2",
+    "@faker-js/faker": "^7.6.0",
+    "@types/aws-lambda": "^8.10.108",
+    "@types/http-errors": "^2.0.0",
+    "@types/jest": "^29.2.0",
+    "@types/lodash": "^4.14.186",
+    "@types/node": "^18.11.7",
+    "@types/uuid": "^8.3.4",
+    "@typescript-eslint/eslint-plugin": "^5.41.0",
+    "@typescript-eslint/parser": "^5.41.0",
+    "aws-lambda": "^1.0.7",
+    "aws-sdk": "^2.1242.0",
+    "commitizen": "^4.2.5",
+    "commitlint-config-jira": "^1.6.4",
+    "commitlint-plugin-jira-rules": "^1.6.4",
+    "cz-conventional-changelog": "^3.3.0",
+    "dotenv": "^16.0.3",
+    "esbuild": "0",
+    "eslint": "^8.26.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-import-resolver-typescript": "^3.5.2",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jsdoc": "^39.3.25",
+    "eslint-plugin-prettier": "^4.2.1",
+    "execa": "^6.1.0",
+    "husky": "^8.0.1",
+    "jest": "^29.2.2",
+    "jest-extended": "^3.1.0",
+    "lint-staged": "^13.0.3",
+    "lodash": "^4.17.21",
+    "openapi-merger": "^0.5.4",
+    "prettier": "^2.7.1",
+    "ts-jest": "^29.0.3",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "4.1.0",
+    "tslib": "^2.4.0",
+    "typescript": "^4.8.4",
+    "uuid": "^9.0.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "lint-staged": {
+    "packages/**/*.ts": [
+      "yarn prettier:write",
+      "yarn lint:fix"
+    ]
+  },
+  "dependencies": {}
+}

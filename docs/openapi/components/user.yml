@@ -1,0 +1,278 @@
+components:
+  requestBodies:
+    PatchUser:
+      description: Mandatory body for PATCH User
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PatchUserRequest'
+    PatchUserMigration:
+      description: Mandatory body for PATCH User Migration
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PatchUserMigrationRequest'
+  responses:
+    # USER
+    GetUser:
+      description: Returns information about a user
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+          example:
+            message: User retrieved
+            code: USER_RETRIEVED
+            data:
+              id: 97dbee6a-270f-4bda-963a-623dc90695e7
+              email: test@codeleap.de
+              name: Test CodeLeap
+              isActive: true
+              deleteAt: null
+    # USER HISTORY
+    GetUserHistory:
+      description: Returns the list of actions made by the user
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GetUserHistoryResponse'
+          example:
+            message: User history retrieved
+            code: USER_HISTORY_RETRIEVED
+            data:
+              histories:
+                - action: LOGIN
+                  details: {}
+                  createdAt: 2022-11-05 00:35:04.894+00
+              user:
+                id: 97dbee6a-270f-4bda-963a-623dc90695e7
+                email: test@codeleap.de
+                name: Test CodeLeap
+                isActive: true
+                deleteAt: null
+    # USER PLAN
+    GetUserPlan:
+      description: Returns information about a user plan
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GetUserPlanResponse'
+          example:
+            message: User plan retrieved
+            code: USER_PLAN_RETRIEVED
+            data:
+              id: 97dbee6a-270f-4bda-963a-623dc90695e7
+              transactionId: transaction123
+              externalId: externaIdRandom
+              options:
+                fileNb: 5
+                anything: ok
+              description: That's a description
+              advantages:
+                - First Advantage
+                - Second Advantage
+              advantagesDescription: That's another description
+              createdAt: 2022-11-05 00:35:04.894+00
+              expireAt: 2022-11-05 00:35:04.894+00
+              isActive: true
+    GetUserPlans:
+      description: Returns information about a user plan history
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GetUserPlansResponse'
+          example:
+            message: User plan History retrieved
+            code: USER_PLAN_HISTORY_RETRIEVED
+            data:
+              - id: 97dbee6a-270f-4bda-963a-623dc90695e7
+                transactionId: transaction123
+                externalId: externaIdRandom
+                options:
+                  fileNb: 5
+                  anything: ok
+                description: That's a description
+                advantages:
+                  - First Advantage
+                  - Second Advantage
+                advantagesDescription: That's another description
+                createdAt: 2022-11-05 00:35:04.894+00
+                expireAt: 2022-11-05 00:35:04.894+00
+                isActive: true
+
+  schemas:
+    # ENUM
+    UserAction:
+      type: string
+      enum:
+        - CREATED
+        - UPDATED
+        - DELETED
+        - LOGIN
+        - LOGOUT
+    MigrationStatus:
+      type: string
+      enum:
+        - STARTED
+        - ABORTED
+        - COMPLETED
+        - PAUSED
+        - ONGOING
+        - PENDING
+    # MODEL
+    User:
+      type: object
+      properties:
+        id:
+          $ref: '../lincloud.yml#/components/schemas/UUID'
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        isActive:
+          type: boolean
+        deleteAt:
+          type: string
+          format: date-time
+      example:
+        id: 97dbee6a-270f-4bda-963a-623dc90695e7
+        email: test@codeleap.de
+        name: Test CodeLeap
+        isActive: true
+        deleteAt: null
+    UserHistory:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/UserAction'
+        details:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+      example:
+        action: LOGIN
+        details: {}
+        createdAt: 2022-11-05 00:35:04.894+00
+    # REQUEST BODY
+    PatchUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+      required:
+        - name
+      example:
+        name: New Name
+    PatchUserMigrationRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/MigrationStatus'
+      required:
+        - status
+      example:
+        status: ONGOING
+    # RESPONSE
+    GetUserHistoryResponse:
+      type: object
+      properties:
+        histories:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserHistory'
+        user:
+          $ref: '#/components/schemas/User'
+      example:
+        histories:
+          - action: LOGIN
+            details: {}
+            createdAt: 2022-11-05 00:35:04.894+00
+        user:
+          id: 97dbee6a-270f-4bda-963a-623dc90695e7
+          email: test@codeleap.de
+          name: Test CodeLeap
+          isActive: true
+          deleteAt: null
+    GetUserPlanResponse:
+      allOf:
+        - $ref: './plan.yml#/components/schemas/Plan'
+        - type: object
+          properties:
+            transactionId:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+            expireAt:
+              type: string
+              format: date-time
+          example:
+            id: 97dbee6a-270f-4bda-963a-623dc90695e7
+            transactionId: transaction123
+            externalId: externaIdRandom
+            options:
+              fileNb: 5
+              anything: ok
+            description: That's a description
+            advantages:
+              - First Advantage
+              - Second Advantage
+            advantagesDescription: That's another description
+            createdAt: 2022-11-05 00:35:04.894+00
+            expireAt: 2022-11-05 00:35:04.894+00
+            isActive: true
+    GetUserPlansResponse:
+      type: array
+      items:
+        allOf:
+          - $ref: './plan.yml#/components/schemas/Plan'
+          - type: object
+            properties:
+              transactionId:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+              expireAt:
+                type: string
+                format: date-time
+            example:
+              id: 97dbee6a-270f-4bda-963a-623dc90695e7
+              transactionId: transaction123
+              externalId: externaIdRandom
+              options:
+                fileNb: 5
+                anything: ok
+              description: That's a description
+              advantages:
+                - First Advantage
+                - Second Advantage
+              advantagesDescription: That's another description
+              createdAt: 2022-11-05 00:35:04.894+00
+              expireAt: 2022-11-05 00:35:04.894+00
+              isActive: true

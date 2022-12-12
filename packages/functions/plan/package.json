@@ -1,0 +1,7 @@
+{
+  "name": "plan",
+  "version": "1.0.0",
+  "author": "Pierrick Libert <pierrick.libert@codeleap.de>",
+  "private": true,
+  "dependencies": {}
+}

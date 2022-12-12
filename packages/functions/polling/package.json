@@ -1,0 +1,9 @@
+{
+  "name": "polling",
+  "version": "1.0.0",
+  "author": "Manh <manh.pham@codeleap.de>",
+  "private": true,
+  "dependencies": {
+    "lodash.groupby": "^4.6.0"
+  }
+}

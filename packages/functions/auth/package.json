@@ -1,0 +1,9 @@
+{
+  "name": "auth",
+  "version": "1.0.0",
+  "author": "Luc <luc.duong@codeleap.de>",
+  "private": true,
+  "dependencies": {
+    "@aws-crypto/client-node": "3.1.1"
+  }
+}

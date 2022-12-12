@@ -1,0 +1,9 @@
+**/*.d.ts
+packages/cdk/cdk.out
+__tests__
+/packages/cdk/cdk.out/
+cdk.out/**/*.ts
+scr/lambda/core/nodejs/**/*.ts
+jest.setup.js
+.eslintrc.js
+jest.config.js

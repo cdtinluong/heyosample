@@ -1,0 +1,106 @@
+name: Deploy Stacks
+on:
+  workflow_call:
+    inputs:
+      stage:
+        type: string
+        required: true
+
+env:
+  STACK_NAME: LC
+  STAGE: ${{ inputs.stage }}
+  NODE_OPTIONS: '--max_old_space_size=4096'
+  REPLICATION_REGIONS: 'ap-southeast-1,us-west-2,eu-west-1'
+  ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+  AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
+  AMPLITUDE_API_SECRET: ${{ secrets.AMPLITUDE_API_SECRET }}
+  AMPLITUDE_BASE_URL: ${{ secrets.AMPLITUDE_BASE_URL }}
+  APPLE_APP_AUTH_KEY: ${{ secrets.APPLE_APP_AUTH_KEY }}
+  APPLE_APP_CLIENT_ID: ${{ secrets.APPLE_APP_CLIENT_ID }}
+  APPLE_APP_KEY_ID: ${{ secrets.APPLE_APP_KEY_ID }}
+  APPLE_APP_TEAM_ID: ${{ secrets.APPLE_APP_TEAM_ID }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  RESOURCE_REGION: 'eu-west-1'
+  AWS_REGION: 'eu-west-1'
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  FACEBOOK_APP_ID: ${{ secrets.FACEBOOK_APP_ID }}
+  FACEBOOK_APP_SECRET: ${{ secrets.FACEBOOK_APP_SECRET }}
+  GOOGLE_APP_ID: ${{ secrets.GOOGLE_APP_ID }}
+  GOOGLE_APP_SECRET: ${{ secrets.GOOGLE_APP_SECRET }}
+  HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
+  BRAZE_API_KEY: ${{ secrets.BRAZE_API_KEY }}
+  BRAZE_REST_ENDPOINT: ${{ secrets.BRAZE_REST_ENDPOINT }}
+  BRAZE_APP_ID: ${{ secrets.BRAZE_APP_ID }}
+  BRAZE_SENDER_EMAIL: ${{ secrets.BRAZE_SENDER_EMAIL }}
+  STACKS_OWNER: 'devops'
+  COGNITO_DOMAIN: ${{ secrets.COGNITO_DOMAIN }}
+  REVENUE_CAT_AUTHORIZER_TOKEN_REGEX: ${{ secrets.REVENUE_CAT_AUTHORIZER_TOKEN_REGEX }}
+
+jobs:
+
+  build_deploy:
+    name: Build and deploy to ${{ inputs.STAGE }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.stage }}
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+  
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Build
+        run: yarn ci
+
+      - uses: dorny/paths-filter@v2.11.1
+        id: filter
+        with:
+          filters: |
+            cross-region:
+              - 'packages/cdk/stacks/cross_region/**'
+              - 'packages/cdk/lib/env.ts'
+            resource:
+              - 'packages/cdk/stacks/resource/**'
+              - 'packages/cdk/lib/env.ts'
+              - 'packages/functions/auth/handlers.ts'
+              - 'packages/functions/auth/services.ts'
+            migration:
+              - 'packages/layers/prisma/nodejs/migrations/**'
+
+      - name: Deploy CrossRegion Stack
+        shell: bash
+        if: ${{ steps.filter.outputs.cross-region == 'true' }}
+        run: |
+          yarn deploy:cross-region --require-approval never --context initialDeploy=true
+          yarn deploy:cross-region --require-approval never --context initialDeploy=false
+
+      - name: Deploy Resource Stack
+        shell: bash
+        if: ${{ steps.filter.outputs.resource == 'true' }}
+        run: |
+          yarn deploy:resource --require-approval never
+
+      - name: Deploy App Stack
+        shell: bash
+        env:
+          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+        run: |
+          eval "$(yarn run --silent deploy:app:pre)"
+          echo "DATABASE_URL=$DATABASE_URL" >> $GITHUB_ENV
+
+          yarn deploy:app --require-approval never
+          yarn deploy:app:post
+
+      # - name: Run DB migrations
+      #   shell: bash
+      #   if: ${{ steps.filter.outputs.migration == 'true' }}
+      #   env:
+      #     DATABASE_URL: ${{ env.DATABASE_URL }}
+      #   run: |
+      #     yarn prisma:deploy

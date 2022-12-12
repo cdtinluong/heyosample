@@ -1,0 +1,13 @@
+{
+  "name": "tools",
+  "version": "1.0.0",
+  "author": "Luc <luc.duong@codeleap.de>",
+  "private": true,
+  "scripts": {
+    "create:handler:index": "npx ts-node --transpile-only --prefer-ts-exts create-handler-index.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "ts-node": "^10.9.1"
+  }
+}

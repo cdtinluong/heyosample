@@ -1,0 +1,42 @@
+# graphql/schema.graphql
+enum UpdateType {
+  file
+  user
+  hierarchy
+  preset
+  # @TODO: add more type here, need to update the mapping template also
+}
+
+type UpdateInfo {
+  id: String! # user id (channel name)
+  action: String!
+  deviceId: String
+  itemId: String # item id
+  item: UpdateType!
+  items: [String!]
+  createdAt: AWSTimestamp # datetime
+}
+
+input UpdateInput {
+  id: String! # user id (channel name)
+  action: String!
+  deviceId: String
+  itemId: String # item id
+  item: UpdateType!
+  items: [String!]
+  createdAt: AWSTimestamp # datetime
+}
+
+type Query {
+  getData: UpdateInfo
+}
+
+type Mutation {
+  dataChanged(input: UpdateInput!): UpdateInfo! # required data response
+}
+
+type Subscription {
+  # user id
+  onDataChanged(id: String!): UpdateInfo
+    @aws_subscribe(mutations: ["dataChanged"])
+}

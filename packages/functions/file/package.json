@@ -1,0 +1,7 @@
+{
+  "name": "file",
+  "version": "1.0.0",
+  "author": "Toan Le <toan.le@codeleap.de> / Cuong Phan <cuong.phan@codeleap.de>",
+  "private": true,
+  "dependencies": {}
+}

@@ -1,0 +1,81 @@
+name: Deploy Environment
+on:
+  pull_request:
+    types: [merged]
+    branches:
+      - develop
+      - staging
+      - main
+  push:
+    branches:
+      - develop
+      - staging
+      - main
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Environment to deploy (DEV|STG|PRD)
+        type: string
+        required: true
+
+jobs:
+  discovery:
+    name: Define Env
+    runs-on: ubuntu-latest
+    outputs:
+      env: ${{ steps.discovery.outputs.env }}
+    steps:
+      - id: discovery
+        run: |
+          if [ '${{ inputs.stage }}' == 'DEV' ]; then
+            env='DEV'
+          fi
+          if [ '${{ inputs.stage }}' == 'STG' ]; then
+            env='STG'
+          fi
+          if [ '${{ inputs.stage }}' == 'PRD' ]; then
+            env='PRD'
+          fi
+          if [ '${{ github.ref_name }}' == 'develop' ]; then
+            if [ '${{ github.event_name }}' == 'pull_request' ] || [ '${{ github.event_name }}' == 'push' ]; then
+              env='DEV'
+            fi
+          fi
+          if [ '${{ github.ref_name }}' == 'staging' ]; then
+            if [ '${{ github.event_name }}' == 'pull_request' ] || [ '${{ github.event_name }}' == 'push' ]; then
+              env='STG'
+            fi
+          fi
+          if [ '${{ github.ref_name }}' == 'main' ]; then
+            if [ '${{ github.event_name }}' == 'pull_request' ] || [ '${{ github.event_name }}' == 'push' ]; then
+              env='PRD'
+            fi
+          fi
+          echo "env=$env" >> $GITHUB_OUTPUT
+
+  build_deploy_dev:
+    name: Deploy DEV
+    needs: discovery
+    if: needs.discovery.outputs.env == 'DEV'
+    uses: LinearityGmbH/LinCloud-BE/.github/workflows/deploy_stacks.yml@develop
+    with:
+      stage: DEV
+    secrets: inherit
+
+  # build_deploy_stg:
+  #   name: Deploy STG
+  #   needs: discovery
+  #   if: needs.discovery.outputs.env == 'STG'
+  #   uses: LinearityGmbH/LinCloud-BE/.github/workflows/deploy_stacks.yml@staging
+  #   with:
+  #     stage: STG
+  #   secrets: inherit
+
+  # build_deploy_prd:
+  #   name: Deploy PRD
+  #   needs: discovery
+  #   if: needs.discovery.outputs.env == 'PRD'
+  #   uses: LinearityGmbH/LinCloud-BE/.github/workflows/deploy_stacks.yml@main
+  #   with:
+  #     stage: PRD
+  #   secrets: inherit

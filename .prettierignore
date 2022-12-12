@@ -1,0 +1,5 @@
+/node_modules
+/lib/**/*
+/CONTRIBUTING.md
+packages/cdk/cdk.out
+/packages/cdk/cdk.out/

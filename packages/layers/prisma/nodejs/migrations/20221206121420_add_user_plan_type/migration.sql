@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "PlanType" AS ENUM ('AUTO_RENEWAL', 'NON_RENEWING');
+
+-- AlterTable
+ALTER TABLE "UserPlan" ADD COLUMN     "type" "PlanType" NOT NULL DEFAULT 'AUTO_RENEWAL';

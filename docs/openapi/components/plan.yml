@@ -1,0 +1,136 @@
+components:
+  parameters:
+    PlanOrExternalIDPath:
+      in: path
+      name: planOrExternalId
+      required: true
+      schema:
+        type: string
+      description: Plan or External ID of the plan
+      example: 97dbee6a-270f-4bda-963a-623dc90695e7
+    StorePath:
+      in: path
+      name: store
+      required: true
+      schema:
+        $ref: '../lincloud.yml#/components/schemas/Store'
+      description: Store for a specific plan
+      example: APP_STORE
+  responses:
+    GetPlanList:
+      description: Returns all active plans
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GetPlanListResponse'
+          example:
+            message: Plans retrieved
+            code: PLANS_RETRIEVED
+            data:
+              - id: 97dbee6a-270f-4bda-963a-623dc90695e7
+                externalId: externaIdRandom
+                options:
+                  fileNb: 5
+                  anything: ok
+                description: That's a description
+                advantages:
+                  - First Advantage
+                  - Second Advantage
+                advantagesDescription: That's another description
+                isActive: true
+    GetPlan:
+      description: Returns a specific active plan
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GetPlanResponse'
+          example:
+            message: Plan retrieved
+            code: PLAN_RETRIEVED
+            data:
+              id: 97dbee6a-270f-4bda-963a-623dc90695e7
+              externalId: externaIdRandom
+              options:
+                fileNb: 5
+                anything: ok
+              description: That's a description
+              advantages:
+                - First Advantage
+                - Second Advantage
+              advantagesDescription: That's another description
+              isActive: true
+
+  schemas:
+    # MODEL
+    Plan:
+      type: object
+      properties:
+        id:
+          $ref: '../lincloud.yml#/components/schemas/UUID'
+        externalId:
+          type: string
+        options:
+          type: object
+        description:
+          type: string
+        advantages:
+          type: array
+          items:
+            type: string
+        advantagesDescription:
+          type: string
+        isActive:
+          type: boolean
+      example:
+        id: 97dbee6a-270f-4bda-963a-623dc90695e7
+        externalId: externaIdRandom
+        options:
+          fileNb: 5
+          anything: ok
+        description: That's a description
+        advantages:
+          - First Advantage
+          - Second Advantage
+        advantagesDescription: That's another description
+        isActive: true
+    # RESPONSE
+    GetPlanListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Plan'
+      example:
+        - id: 97dbee6a-270f-4bda-963a-623dc90695e7
+          externalId: externaIdRandom
+          options:
+            fileNb: 5
+            anything: ok
+          description: That's a description
+          advantages:
+            - First Advantage
+            - Second Advantage
+          advantagesDescription: That's another description
+          isActive: true
+    GetPlanResponse:
+      $ref: '#/components/schemas/Plan'
+      example:
+        - id: 97dbee6a-270f-4bda-963a-623dc90695e7
+          externalId: externaIdRandom
+          options:
+            fileNb: 5
+            anything: ok
+          description: That's a description
+          advantages:
+            - First Advantage
+            - Second Advantage
+          advantagesDescription: That's another description
+          isActive: true

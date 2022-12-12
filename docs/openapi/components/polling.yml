@@ -1,0 +1,85 @@
+components:
+  responses:
+    # polling the update
+    GetPolling:
+      description: Returns information about the update since last update
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ModifiedData'
+                      next:
+                        type: string
+                        format: byte
+          example:
+            message: Polling retrieved
+            code: POLLING_SUCCESS
+            data:
+              items:
+                - id: 97dbee6a-270f-4bda-963a-623dc90695e7
+                  item: user
+                  action: updated
+                  items: []
+                  createdAt: 2022-11-05 00:35:04.894+00
+                - id: 97dbee6a-270f-4bda-963a-623dc90695e7
+                  item: file
+                  action: updated
+                  items:
+                    - 97dbee6a-270f-4bda-963a-623dc90695e8
+                    - 97dbee6a-270f-4bda-963a-623dc90695e9
+                  createdAt: 2022-11-05 00:35:04.894+00
+              next: dGVzdGNvZGVsZWFw
+
+  schemas:
+    ModifiedData:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Item id
+        item:
+          type: string
+          enum:
+            - user
+            - file
+            - hierarchy
+        action: 
+          type: string
+          enum:
+            - created
+            - updated
+            - deleted
+        deviceId:
+          type: string
+          description: The device that cause the changes
+        items:
+          type: array
+          items:
+            type: string
+            format: uuid
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - item
+        - action
+        - deviceId
+        - createdAt
+      example:
+        id: 97dbee6a-270f-4bda-963a-623dc90695e7
+        item: file
+        action: updated
+        items:
+          - 97dbee6a-270f-4bda-963a-623dc90695e8
+          - 97dbee6a-270f-4bda-963a-623dc90695e9
+        createdAt: 2022-11-05 00:35:04.894+00

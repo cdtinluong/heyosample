@@ -1,0 +1,467 @@
+components:
+  parameters:
+    HierarchyIDQuery:
+      in: query
+      name: hierarchyId
+      required: false
+      schema:
+        type: string
+        format: uuid
+      description: ID of the hierarchy
+      example: 97dbee6a-270f-4bda-963a-623dc90695e7
+    HierarchyIDPath:
+      in: path
+      name: hierarchyId
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Hierarchy ID of the hierarchy
+      example: 97dbee6a-270f-4bda-963a-623dc90695e7
+  requestBodies:
+    PatchHierarchy:
+      description: Mandatory body to rename hierarchy
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PatchHierarchyRequest'
+    PostHierarchy:
+      description: Mandatory body to create hierarchy
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PostHierarchyRequest'
+    PostHierarchyBatch:
+      description: Mandatory body for batch create hierarchy
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PostHierarchyBatchRequest'
+  responses:
+    PostHierarchy:
+      description: Returns data for successful hierarchy creation
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Hierarchy'
+          examples:
+            postHierarchyWithoutFile:
+              summary: Hierarchy creation without file
+              value:
+                message: Hierarchy created
+                code: HIERARCHY_CREATED
+                data:
+                  id: 97dbee6a-270f-4bda-963a-623dc90695e7
+                  path: /folder
+            postHierarchyWithFile:
+              summary: Hierarchy creation with a file
+              value:
+                message: Hierarchy created
+                code: HIERARCHY_CREATED
+                data:
+                  id: 97dbee6a-270f-4bda-963a-623dc90695e7
+                  path: /file.vectornator
+                  fileId: 97dbee6a-270f-4bda-963a-623dc90695e8
+    PostHierarchyBatch:
+      description: Returns data for successful batch hierarchy creation
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GetHierarchyListResponse'
+          example:
+            message: Hierarchies created
+            code: HIERARCHY_BATCH_CREATED
+            data:
+              - id: 2f40b3d2-e835-4203-a2a7-42f18c967137
+                path: /abc/
+                files:
+                  - id: 2fd3c410-5464-4c80-b3fa-35815e9f54bd
+                    name: file_1.vectornator
+                    hierarchyId: 3fd3c410-5464-4c80-b3fa-35815e9f54bd
+                    path: /abc/file_1.vectornator
+                    deleteAt: null
+                    type: vectornator
+                children:
+                  - id: c839de51-32bc-4ac5-a8b8-73cd8601f4e6
+                    path: /abc/def/
+                    files: []
+                    children: []
+                    deleteAt: null
+                deleteAt: null
+    GetHierarchyList:
+      description: Returns data for getting hierarchy tree successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GetHierarchyListResponse'
+          examples:
+            GetHierarchyOwnerList:
+              summary: Retrieve Owner List
+              value:
+                message: Hierarchy owner list retrieved
+                code: HIERARCHY_LIST_OWNER_RETRIEVED
+                data:
+                  - id: 2f40b3d2-e835-4203-a2a7-42f18c967137
+                    path: /abc/
+                    files:
+                      - id: 2fd3c410-5464-4c80-b3fa-35815e9f54bd
+                        name: file_1.vectornator
+                        hierarchyId: 3fd3c410-5464-4c80-b3fa-35815e9f54bd
+                        path: /abc/file_1.vectornator
+                        deleteAt: null
+                        thumbnail: https://mdmomrgzfqhkz.mrap.accesspoint.s3-global.amazonaws.com/0849ebc7-1879-4951-bd65-8c6782ceb0b8/02ab375d-6cab-4ce9-85b8-dec77f4396a7/Thumbnail.png
+                        type: vectornator
+                    children:
+                      - id: c839de51-32bc-4ac5-a8b8-73cd8601f4e6
+                        path: /abc/def/
+                        files: []
+                        children: []
+                        deleteAt: null
+                    deleteAt: null
+            GetHierarchySharedList:
+              summary: Retrieve Shared List
+              value:
+                message: Hierarchy shared list retrieved
+                code: HIERARCHY_LIST_SHARED_RETRIEVED
+                data:
+                  - id: 2f40b3d2-e835-4203-a2a7-42f18c967137
+                    path: /abc/
+                    files:
+                      - id: 2fd3c410-5464-4c80-b3fa-35815e9f54bd
+                        name: file_1.vectornator
+                        hierarchyId: 3fd3c410-5464-4c80-b3fa-35815e9f54bd
+                        path: /abc/file_1.vectornator
+                        deleteAt: null
+                        type: vectornator
+                    children:
+                      - id: c839de51-32bc-4ac5-a8b8-73cd8601f4e6
+                        path: /abc/def/
+                        files: []
+                        children: []
+                        deleteAt: null
+                    deleteAt: null
+    GetPresetList:
+      description: Returns data for getting preset list successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GetHierarchyListResponse'
+          example:
+            message: Hierarchy preset list retrieved
+            code: PRESET_LIST_RETRIEVED
+            data:
+              - id: 2f40b3d2-e835-4203-a2a7-42f18c967137
+                path: /abc/
+                files:
+                  - id: 2fd3c410-5464-4c80-b3fa-35815e9f54bd
+                    name: file_1.vectornator
+                    hierarchyId: 3fd3c410-5464-4c80-b3fa-35815e9f54bd
+                    path: /abc/file_1.vectornator
+                    deleteAt: null
+                    type: preset
+                children:
+                  - id: c839de51-32bc-4ac5-a8b8-73cd8601f4e6
+                    path: /abc/def/
+                    files: []
+                    children: []
+                    deleteAt: null
+                deleteAt: null
+    GetHierarchyListTrashed:
+      description: Returns data for getting trashed hierarchy tree successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GetHierarchyListTrashedResponse'
+          example:
+            message: Hierarchy trashed list retrieved
+            code: HIERARCHY_LIST_TRASHED_RETRIEVED
+            data:
+              hierarchies:
+                - id: 2f40b3d2-e835-4203-a2a7-42f18c967137
+                  path: /abc/
+                  files:
+                    - id: 2fd3c410-5464-4c80-b3fa-35815e9f54bd
+                      name: file_1.vectornator
+                      hierarchyId: 3fd3c410-5464-4c80-b3fa-35815e9f54bd
+                      path: /abc/file_1.vectornator
+                      thumbnail: https://mdmomrgzfqhkz.mrap.accesspoint.s3-global.amazonaws.com/0849ebc7-1879-4951-bd65-8c6782ceb0b8/02ab375d-6cab-4ce9-85b8-dec77f4396a7/Thumbnail.png
+                      deleteAt: null
+                      type: preset
+                  children:
+                    - id: c839de51-32bc-4ac5-a8b8-73cd8601f4e6
+                      path: /abc/def/
+                      files: []
+                      children: []
+                      deleteAt: null
+                  deleteAt: null
+              files:
+                - id: 97dbee6a-270f-4bda-963a-623dc90695e7
+                  hierarchyId: 97dbee6a-270f-4bda-963a-623dc90695e8
+                  name: file.vectornator
+                  path: /file.vectornator
+                  deleteAt: null
+                  type: vectornator
+    PatchHierarchy:
+      description: Returns data for hierarchy renamed successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GenericHierarchiesResponse'
+          example:
+            message: Hierarchy updated
+            code: HIERARCHY_RENAMED
+            data:
+              - id: 97dbee6a-270f-4bda-963a-623dc90695e7
+                path: /abc/
+    DeleteHierarchy:
+      description: Returns hierarchy ID successfully deleted
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GenericHierarchiesResponse'
+          examples:
+            DeleteHierarchy:
+              summary: Delete Hierarchy
+              value:
+                message: Hierarchy deleted
+                code: HIERARCHY_DELETED
+                data:
+                  - id: 97dbee6a-270f-4bda-963a-623dc90695e7
+                    path: /abc/
+            DeleteHierarchyPermanently:
+              summary: Delete Hierarchy Permanently
+              value:
+                message: Hierarchy permanently deleted
+                code: HIERARCHY_PERMANENTLY_DELETED
+                data:
+                  - id: 97dbee6a-270f-4bda-963a-623dc90695e7
+                    path: /abc/
+    PostHierarchyRecover:
+      description: Returns hierarchy IDs successfully recovered
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GenericHierarchiesResponse'
+          example:
+            message: Hierarchy recovered
+            code: HIERARCHY_RECOVERED
+            data:
+              - id: 97dbee6a-270f-4bda-963a-623dc90695e7
+                path: /abc/
+  schemas:
+    # ENUM
+    # MODEL
+    HierarchySimple:
+      type: object
+      properties:
+        id:
+          $ref: '../lincloud.yml#/components/schemas/UUID'
+        path:
+          type: string
+      example:
+        id: 97dbee6a-270f-4bda-963a-623dc90695e7
+        path: /test/
+    Hierarchy:
+      allOf:
+        - $ref: '#/components/schemas/HierarchySimple'
+        - type: object
+          properties:
+            fileId:
+              $ref: '../lincloud.yml#/components/schemas/UUID'
+      example:
+        id: 97dbee6a-270f-4bda-963a-623dc90695e7
+        path: /test/test.vectornator
+        fileId: 97dbee6a-270f-4bda-963a-623dc90695e8
+    HierarchyFile:
+      type: object
+      properties:
+        id:
+          $ref: '../lincloud.yml#/components/schemas/UUID'
+        hierarchyId:
+          $ref: '../lincloud.yml#/components/schemas/UUID'
+        name:
+          type: string
+        path:
+          type: string
+        deleteAt:
+          type: string
+          format: date-time
+        type:
+          $ref: '../lincloud.yml#/components/schemas/FileType'
+        thumbnail:
+          type: string
+      example:
+        id: 97dbee6a-270f-4bda-963a-623dc90695e7
+        hierarchyId: 97dbee6a-270f-4bda-963a-623dc90695e8
+        name: file.vectornator
+        path: /file.vectornator
+        deleteAt: null
+        type: vectornator
+        thumbnail: https://mdmomrgzfqhkz.mrap.accesspoint.s3-global.amazonaws.com/0849ebc7-1879-4951-bd65-8c6782ceb0b8/02ab375d-6cab-4ce9-85b8-dec77f4396a7/Thumbnail.png
+    HierarchyTree:
+      type: object
+      properties:
+        id:
+          $ref: '../lincloud.yml#/components/schemas/UUID'
+        path:
+          type: string
+        deleteAt:
+          type: string
+          format: date-time
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/HierarchyFile'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/HierarchyTree'
+      example:
+        id: 2f40b3d2-e835-4203-a2a7-42f18c967137
+        path: /abc/
+        files:
+          - id: 2fd3c410-5464-4c80-b3fa-35815e9f54bd
+            name: file_1.vectornator
+            hierarchyId: 3fd3c410-5464-4c80-b3fa-35815e9f54bd
+            path: /abc/file_1.vectornator
+            deleteAt: null
+            type: vectornator
+            thumbnail: https://images.com/thumbnail.png
+        children:
+          - id: c839de51-32bc-4ac5-a8b8-73cd8601f4e6
+            path: /abc/def/
+            files: []
+            children: []
+            deleteAt: null
+        deleteAt: null
+    # REQUEST BODY
+    PostHierarchyRequest:
+      type: object
+      properties:
+        folder:
+          $ref: '../lincloud.yml#/components/schemas/FolderRegex'
+        file:
+          type: object
+          properties:
+            name:
+              $ref: '../lincloud.yml#/components/schemas/FilenameRegex'
+            size:
+              $ref: '../lincloud.yml#/components/schemas/FileSizeRegex'
+            type:
+              $ref: '../lincloud.yml#/components/schemas/FileType'
+          required:
+            - name
+            - size
+            - type
+      required:
+        - folder
+      example:
+        folder: /abc/
+        file:
+          name: file.vectornator
+          size: '1'
+          type: vectornator
+    PostHierarchyBatchRequest:
+      type: object
+      properties:
+        paths:
+          type: array
+          items:
+            type: object
+            properties:
+              name: 
+                $ref: '../lincloud.yml#/components/schemas/HierarchyRegex'
+              size:
+                $ref: '../lincloud.yml#/components/schemas/FileSizeRegex'
+              type:
+                $ref: '../lincloud.yml#/components/schemas/FileType'
+            required:
+            - name
+            - size
+            - type
+      required:
+        - paths
+      example:
+        paths:
+          - name: /abc/file.vectornator
+            size: '1'
+            type: vectornator
+          - name: /preset.vectornator
+            size: '1'
+            type: preset
+    PatchHierarchyRequest:
+      type: object
+      properties:
+        oldPath:
+          $ref: '../lincloud.yml#/components/schemas/HierarchyRegex'
+        newPath:
+          $ref: '../lincloud.yml#/components/schemas/HierarchyRegex'
+      required:
+        - oldPath
+        - newPath
+      example:
+        oldPath: /abc/file.vectornator
+        newPath: /abc/file1.vectornator
+    # RESPONSE
+    GetHierarchyListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/HierarchyTree'
+    GetHierarchyListTrashedResponse:
+      type: object
+      properties:
+        hierarchies:
+          type: array
+          items:
+            $ref: '#/components/schemas/HierarchyTree'
+        files:
+          type: array
+          items:
+             $ref: '#/components/schemas/HierarchyFile'
+    GenericHierarchiesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/HierarchySimple'

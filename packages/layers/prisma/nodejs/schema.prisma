@@ -1,0 +1,395 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-1.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+  COLLABORATOR
+}
+
+enum FileStatus {
+  OPENED
+  CLOSED
+  TRASHED
+  UPLOADING
+  UPLOADED
+  ABORTED
+  FAILED
+  TRASHED_PERMANENTLY
+  ACTIVE
+}
+
+enum FileAction {
+  CREATED
+  UPDATED
+  DOWNLOADED
+  DELETED
+  RECOVERED
+}
+
+enum FilePermission {
+  READ_WRITE
+  READ_COMMENT
+  READ_ONLY
+}
+
+enum OrgAction {
+  USER_ADDED
+  USER_DELETED
+  CREATED
+  UPDATED
+  DELETED
+}
+
+enum UserAction {
+  CREATED
+  UPDATED
+  DELETED
+  RECOVERED
+  LOGIN
+  LOGOUT
+}
+
+enum HierarchyAction {
+  CREATED
+  UPDATED
+  DELETED
+  RECOVERED
+}
+
+enum MigrationStatus {
+  STARTED
+  ABORTED
+  COMPLETED
+  PAUSED
+  ONGOING
+  PENDING
+}
+
+enum FileType {
+  VECTORNATOR
+  ANIMATOR
+  PRESET
+}
+
+enum PlanAction {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+enum Store {
+  APP_STORE
+  STRIPE
+  AMAZON
+  MAC_APP_STORE
+  PLAY_STORE
+  PROMOTIONAL
+}
+
+enum PlanType {
+  AUTO_RENEWAL
+  NON_RENEWING
+}
+
+model User {
+  id                    String                 @id @default(uuid()) @db.Uuid
+  email                 String                 @unique
+  name                  String
+  isActive              Boolean?               @default(true) @map("is_active")
+  createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deleteAt              DateTime?              @map("delete_at") @db.Timestamptz(3)
+  organizations         UsersOnOrganizations[]
+  plans                 UserPlan[]
+  usage                 UserUsage?
+  files                 File[]
+  fileHistories         FileHistory[]
+  hierarchyHistories    HierarchyHistory[]
+  fileUsers             FileUser[]
+  fileUserHistories     FileUserHistory[]
+  organizationHistories OrganizationHistory[]
+  histories             UserHistory[]
+  hierarchies           Hierarchy[]
+  deviceId              String                 @default("no-device-id") @map("device_id") @db.VarChar(100)
+  migrationStatus       MigrationStatus?       @map("migration_status")
+
+  @@index([isActive])
+  @@index([deleteAt])
+}
+
+model UserHistory {
+  id        String     @id @default(uuid()) @db.Uuid
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String     @map("user_id") @db.Uuid
+  action    UserAction
+  details   Json?
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  deviceId  String     @map("device_id") @db.VarChar(100)
+
+  @@index([createdAt])
+}
+
+model Organization {
+  id                    String                 @id @default(uuid()) @db.Uuid
+  name                  String
+  description           String?
+  isActive              Boolean?               @default(true) @map("is_active")
+  createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  users                 UsersOnOrganizations[]
+  files                 File[]
+  organizationHistories OrganizationHistory[]
+
+  @@index([isActive])
+}
+
+model UsersOnOrganizations {
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String       @map("user_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @map("organization_id") @db.Uuid
+  // one user has one role in his organization
+  role           Role         @map("role")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@id([userId, organizationId])
+}
+
+model OrganizationHistory {
+  id             String        @id @default(uuid()) @db.Uuid
+  requester      User?         @relation(fields: [requesterId], references: [id], onDelete: SetNull)
+  requesterId    String?       @map("requester_id") @db.Uuid
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  organizationId String?       @map("organization_id") @db.Uuid
+  action         OrgAction
+  details        Json?
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+}
+
+model Plan {
+  id                    String        @id @default(uuid()) @db.Uuid
+  options               Json
+  description           String?
+  advantagesDescription String?       @map("advantages_description")
+  advantages            String[]      @default([]) @db.VarChar(150)
+  users                 UserPlan[]
+  histories             PlanHistory[]
+  isActive              Boolean       @default(true) @map("is_active")
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  products              PlanProduct[]
+
+  @@index([isActive])
+}
+
+model PlanHistory {
+  id        String     @id @default(uuid()) @db.Uuid
+  plan      Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId    String     @map("plan_id") @db.Uuid
+  details   Json?
+  action    PlanAction
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+}
+
+model PlanProduct {
+  id                    String              @id @default(uuid()) @db.Uuid
+  plan                  Plan                @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId                String              @map("plan_id") @db.Uuid
+  externalId            String              @map("external_id") @db.VarChar(150)
+  store                 Store
+  isActive              Boolean             @default(true) @map("is_active")
+  createdAt             DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  planProductHistories  PlanProductHistory[]
+  userPlans             UserPlan[]
+
+  @@index([externalId])
+  @@index([store])
+  @@index([isActive])
+  @@unique([planId, store, isActive])
+}
+
+model PlanProductHistory {
+  id            String      @id @default(uuid()) @db.Uuid
+  planProduct   PlanProduct @relation(fields: [planProductId], references: [id], onDelete: Cascade)
+  planProductId String      @map("plan_product_id") @db.Uuid
+  details       Json?
+  action        PlanAction
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+}
+
+model UserPlan {
+  id              String            @id @default(uuid()) @db.Uuid
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String            @map("user_id") @db.Uuid
+  plan            Plan              @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId          String            @map("plan_id") @db.Uuid
+  planProduct     PlanProduct       @relation(fields: [planProductId], references: [id], onDelete: Cascade)
+  planProductId   String            @map("plan_product_id") @db.Uuid
+  transactionId   String            @map("transaction_id") @db.VarChar(150)
+  details         Json
+  type            PlanType          @default(AUTO_RENEWAL)
+  isActive        Boolean           @default(true) @map("is_active")
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  expireAt        DateTime?         @map("expire_at") @db.Timestamptz(3)
+  histories       UserPlanHistory[]
+
+  @@index([isActive])
+}
+
+model UserPlanHistory {
+  id         String     @id @default(uuid()) @db.Uuid
+  userPlan   UserPlan   @relation(fields: [userPlanId], references: [id], onDelete: Cascade)
+  userPlanId String     @map("user_plan_id") @db.Uuid
+  details    Json?
+  action     PlanAction
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+}
+
+model UserUsage {
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String  @unique @map("user_id") @db.Uuid
+  nbFile        Int?    @map("nb_file") @db.SmallInt
+  totalFileSize BigInt? @map("total_file_size") @db.BigInt
+}
+
+model File {
+  id                   String               @id @default(uuid()) @db.Uuid
+  user                 User?                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId               String?              @map("user_id") @db.Uuid
+  organization         Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId       String               @map("organization_id") @db.Uuid
+  name                 String               @db.VarChar(150)
+  size                 BigInt               @db.BigInt
+  checksum             String               @db.VarChar(255)
+  status               FileStatus           @map("status")
+  hasConflict          Boolean              @default(false) @map("has_conflict")
+  type                 FileType?
+  createdAt            DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deleteAt             DateTime?            @map("delete_at") @db.Timestamptz(3)
+  contents             FileContent[]
+  histories            FileHistory[]
+  fileContentHistories FileContentHistory[]
+  hierarchy            Hierarchy?
+  hierarchyHistories   HierarchyHistory[]
+  users                FileUser[]
+  fileUserHistories    FileUserHistory[]
+  deviceId             String               @map("device_id") @db.VarChar(100)
+
+  @@index([deleteAt])
+}
+
+model FileContent {
+  id        String               @id @default(uuid()) @db.Uuid
+  file      File                 @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId    String               @map("file_id") @db.Uuid
+  name      String               @db.VarChar(100)
+  size      BigInt               @db.BigInt
+  status    FileStatus
+  version   String               @default("1") @db.VarChar(255)
+  histories FileContentHistory[]
+  deviceId  String               @default("no-device-id") @map("device_id") @db.VarChar(100)
+  createdAt DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deleteAt  DateTime?            @map("delete_at") @db.Timestamptz(3)
+
+  @@unique([fileId, name])
+}
+
+model FileContentHistory {
+  id            String      @id @default(uuid()) @db.Uuid
+  file          File        @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId        String      @map("file_id") @db.Uuid
+  fileContent   FileContent @relation(fields: [fileContentId], references: [id], onDelete: Cascade)
+  fileContentId String      @map("file_content_id") @db.Uuid
+  deviceId      String      @map("device_id") @db.VarChar(100)
+  name          String      @db.VarChar(255)
+  version       String      @db.VarChar(255)
+  size          BigInt      @db.BigInt
+  action        FileAction
+  status        FileStatus
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+}
+
+model FileHistory {
+  id          String     @id @default(uuid()) @db.Uuid
+  file        File       @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId      String     @map("file_id") @db.Uuid
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String     @map("user_id") @db.Uuid
+  deviceId    String     @map("device_id") @db.VarChar(100)
+  name        String     @db.VarChar(255)
+  size        BigInt     @db.BigInt
+  action      FileAction
+  type        FileType?
+  hasConflict Boolean    @default(false) @map("has_conflict")
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+}
+
+model Hierarchy {
+  id                 String             @id @default(uuid()) @db.Uuid
+  file               File?              @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId             String?            @unique @map("file_id") @db.Uuid
+  path               String             @db.Text
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  hierarchyHistories HierarchyHistory[]
+  type               FileType?
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String             @map("user_id") @db.Uuid
+  deleteAt           DateTime?          @map("delete_at") @db.Timestamptz(3)
+  deviceId           String             @map("device_id") @db.VarChar(100)
+  status             FileStatus         @map("status")
+
+  @@index([path], type: SpGist)
+  @@index([userId, deviceId])
+}
+
+model HierarchyHistory {
+  id          String          @id @default(uuid())
+  requester   User            @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterId String          @map("requester_id") @db.Uuid
+  file        File?           @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId      String?         @map("file_id") @db.Uuid
+  hierarchy   Hierarchy       @relation(fields: [hierarchyId], references: [id], onDelete: Cascade)
+  hierarchyId String          @map("hierarchy_id") @db.Uuid
+  oldPath     String?         @map("old_path") @db.Text
+  newPath     String          @map("new_path") @db.Text
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  action      HierarchyAction @default(CREATED)
+  type        FileType?
+  deviceId    String          @map("device_id") @db.VarChar(100)
+}
+
+model FileUser {
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String         @map("user_id") @db.Uuid
+  file       File           @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId     String         @map("file_id") @db.Uuid
+  permission FilePermission
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@id([userId, fileId])
+}
+
+model FileUserHistory {
+  id          String     @id @default(uuid()) @db.Uuid
+  requester   User       @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterId String     @map("requester_id") @db.Uuid
+  file        File       @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId      String     @map("file_id") @db.Uuid
+  action      FileAction
+  details     Json?
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+}

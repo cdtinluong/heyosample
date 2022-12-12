@@ -1,0 +1,500 @@
+components:
+  parameters:
+    FileIDPath:
+      in: path
+      name: fileId
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: File ID of the file
+      example: 97dbee6a-270f-4bda-963a-623dc90695e7
+    FileContentIDPath:
+      in: path
+      name: fileContentId
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: ID of the file content
+      example: 97dbee6a-270f-4bda-963a-623dc90695e7
+  requestBodies:
+    PostFileDownload:
+      description: Mandatory body for Download file
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PostFileDownloadRequest'
+    PostFileUpload:
+      description: Mandatory body for uploading file
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PostFileUploadRequest'
+    PostFileUploadComplete:
+      description: Mandatory body for completing uploading file
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PostFileUploadCompleteRequest'
+    PostFileUploadAbort:
+      description: Mandatory body for aborting uploading file
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PostFileUploadAbortRequest'
+    PostFileResolveConflict:
+      description: Mandatory body for aborting uploading file
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PostFileConflictResolveRequest'
+  responses:
+    PostFileUpload:
+      description: Returns information to proceed with an upload
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PostFileUploadResponse'
+          example:
+            message: File contents upload can be started
+            code: FILE_UPLOAD
+            data:
+              id: 97dbee6a-270f-4bda-963a-623dc90695e7
+              name: file.vectornator
+              fileContents:
+                - name: artboard.json
+                  uploadId: upload123
+                  chunkSize: 1
+                  presignedUrls:
+                    - https://presignedurl.com/1
+                    - https://presignedurl.com/2
+    PostFileDownload:
+      description: Returns the list of files uploaded by the user
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PostFileDownloadResponse'
+          example:
+            message: File contents download can be started
+            code: FILE_DOWNLOAD
+            data:
+              id: 97dbee6a-270f-4bda-963a-623dc90695e7
+              fileContents:
+                - name: artboard.json
+                  version: version1
+                  chunkSize: 1
+                  presignedUrls:
+                    - https://presignedurl.com/1
+                    - https://presignedurl.com/2
+    GetFile:
+      description: Returns data for getting file info successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/File'
+          example:
+            message: File retrieved
+            code: FILE_RETRIEVED
+            data:
+              id: 97dbee6a-270f-4bda-963a-623dc90695e7
+              name: file.vectornator
+              size: '1'
+              checksum: checksum
+              status: OPENED
+              type: vectornator
+              hasConflict: false
+              deleteAt: null
+              thumbnail: https://mdmomrgzfqhkz.mrap.accesspoint.s3-global.amazonaws.com/0849ebc7-1879-4951-bd65-8c6782ceb0b8/02ab375d-6cab-4ce9-85b8-dec77f4396a7/Thumbnail.png
+              contents:
+                - id: 97dbee6a-270f-4bda-963a-623dc90695e8
+                  name: artboard.json
+                  size: 1
+                  status: OPENED
+                  version: version1
+    PostFileUploadComplete:
+      description: Returns a list of files not completed by S3
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PostFileUploadCompleteResponse'
+          example:
+            message: Upload completed
+            code: FILE_UPLOAD_COMPLETED
+            data:
+              successes:
+                - name: artboard.json
+                  version: version2
+              failures:
+                - artboard1.json
+                - media.dat
+              conflictedFileContents:
+                - id: 97dbee6a-270f-4bda-963a-623dc90695e8
+                  name: artboard1.json
+                  size: 1
+                  status: FAILED
+                  version: version1
+    GetFileConflict:
+      description: Returns a list of conflict file contents
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../lincloud.yml#/components/schemas/BodyGeneral'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FileConflictResponse'
+          example:
+            message: File conflict retrieved
+            code: FILE_CONFLICT_RETRIEVED
+            data:
+              - id: 97dbee6a-270f-4bda-963a-623dc90695e7
+                name: 'media.dat'
+                versions:
+                  - v1
+                  - v2
+                  - v3
+  schemas:
+    # ENUM
+    FileStatus:
+      type: string
+      enum: [OPENED, CLOSED, TRASHED, UPLOADING, UPLOADED, ABORTED, FAILED, TRASHED_PERMANENTLY, ACTIVE]
+    ConflictResolution:
+      type: string
+      enum: [DOWNLOAD_CHANGE, KEEP_CHANGE, CREATE_TWO_FILES]
+    # MODEL
+    FileContent:
+      type: object
+      properties:
+        id:
+          $ref: '../lincloud.yml#/components/schemas/UUID'
+        name:
+          $ref: '../lincloud.yml#/components/schemas/ContentFilenameRegex'
+        size:
+          type: number
+          minimum: 1
+        status: 
+          $ref: '#/components/schemas/FileStatus'
+        version:
+          type: string
+      example:
+        id: 97dbee6a-270f-4bda-963a-623dc90695e8
+        name: artboard.json
+        size: 1
+        status: OPENED
+        version: version1
+    File:
+      type: object
+      properties:
+        id:
+          $ref: '../lincloud.yml#/components/schemas/UUID'
+        name:
+          type: string
+        size:
+          type: string
+        checksum:
+          type: string
+        status:
+          $ref: '#/components/schemas/FileStatus'
+        type:
+          $ref: '../lincloud.yml#/components/schemas/FileType'
+        hasConflict:
+          type: boolean
+        deleteAt:
+          type: string
+          format: date-time
+        contents:
+          type: array
+          items:
+             $ref: '#/components/schemas/FileContent'
+        thumbnail:
+          type: string
+          pattern: url
+      example:
+        id: 97dbee6a-270f-4bda-963a-623dc90695e7
+        name: file.vectornator
+        size: '1'
+        checksum: checksum
+        status: OPENED
+        type: vectornator
+        hasConflict: false
+        deleteAt: null
+        thumbnail: https://mdmomrgzfqhkz.mrap.accesspoint.s3-global.amazonaws.com/0849ebc7-1879-4951-bd65-8c6782ceb0b8/02ab375d-6cab-4ce9-85b8-dec77f4396a7/Thumbnail.png
+        contents:
+          - id: 97dbee6a-270f-4bda-963a-623dc90695e8
+            name: artboard.json
+            size: 1
+            status: OPENED
+            version: version1
+    # REQUEST BODY
+    PostFileUploadRequest:
+      type: object
+      properties:
+        fileContents:
+          type: array
+          items:
+            type: object
+            properties:
+              name: 
+                $ref: '../lincloud.yml#/components/schemas/ContentFilenameRegex'
+              size:
+                type: number
+                minimum: 1
+            required:
+              - name
+              - size
+      required:
+        - fileContents
+      example:
+        fileContents:
+          - name: artboard.json
+            size: 1
+    PostFileUploadCompleteRequest:
+      type: object
+      properties:
+        fileContents:
+          type: array
+          items:
+            type: object
+            properties:
+              uploadId:
+                type: string
+              name:
+                $ref: '../lincloud.yml#/components/schemas/ContentFilenameRegex'
+              version:
+                type: string
+              parts:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ETag:
+                      type: string
+                    PartNumber:
+                      type: number
+                  required:
+                    - ETag
+                    - PartNumber
+            required:
+              - uploadId
+              - name
+              - version
+              - parts
+      required:
+        - fileContents
+      example:
+        fileContents:
+          - name: artboard.json
+            version: version1
+            uploadId: upload123
+            parts:
+              - ETag: ETag1
+                PartNumber: 1
+    PostFileUploadAbortRequest:
+      type: object
+      properties:
+        fileContents:
+          type: array
+          items:
+            type: object
+            properties:
+              uploadId:
+                type: string
+              name:
+                $ref: '../lincloud.yml#/components/schemas/ContentFilenameRegex'
+            required:
+              - uploadId
+              - name
+      required:
+        - fileContents
+      example:
+        fileContents:
+          - name: artboard.json
+            uploadId: upload123
+    PostFileDownloadRequest:
+      type: object
+      properties:
+        fileContents:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                $ref: '../lincloud.yml#/components/schemas/ContentFilenameRegex'
+              version:
+                type: string
+            required:
+              - name
+              - version
+      required:
+        - fileContents
+      example:
+        fileContents:
+          - name: artboard.json
+            version: version1
+    PostFileConflictResolveRequest:
+      type: object
+      properties:
+        resolution:
+          $ref: '#/components/schemas/ConflictResolution'
+        fileContents:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                $ref: '../lincloud.yml#/components/schemas/ContentFilenameRegex'
+              keepingVersion:
+                type: string
+              deletingVersion:
+                type: string
+            required:
+              - name
+              - keepingVersion
+              - deletingVersion
+      required:
+        - resolution
+        - fileContents
+      example:
+        resolution: KEEP_CHANGE
+        fileContents:
+          - name: artboard.json
+            keepingVersion: upload124
+            deletingVersion: upload123
+    # RESPONSE
+    PostFileUploadResponse:
+      type: object
+      properties:
+        id:
+          $ref: '../lincloud.yml#/components/schemas/UUID'
+        name:
+          $ref: '../lincloud.yml#/components/schemas/FilenameRegex'
+        fileContents:
+          type: array
+          items:
+            type: object
+            properties:
+              name: 
+                $ref: '../lincloud.yml#/components/schemas/ContentFilenameRegex'
+              uploadId:
+                type: string
+              chunkSize:
+                type: number
+                minimum: 1
+              presignedUrls:
+                type: array
+                items:
+                  type: string
+      example:
+        id: 97dbee6a-270f-4bda-963a-623dc90695e7
+        name: file.vectornator
+        fileContents:
+          - name: artboard.json
+            uploadId: upload123
+            chunkSize: 1
+            presignedUrls:
+              - https://presignedurl.com/1
+              - https://presignedurl.com/2
+    PostFileDownloadResponse:
+      type: object
+      properties:
+        id:
+          $ref: '../lincloud.yml#/components/schemas/UUID'
+        fileContents:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                $ref: '../lincloud.yml#/components/schemas/ContentFilenameRegex'
+              version:
+                type: string
+              chunkSize:
+                type: number
+                minimum: 1
+              presignedUrls:
+                type: array
+                items:
+                  type: string
+      example:
+        id: 97dbee6a-270f-4bda-963a-623dc90695e7
+        fileContents:
+          - name: artboard.json
+            version: version1
+            chunkSize: 1
+            presignedUrls:
+              - https://presignedurl.com/1
+              - https://presignedurl.com/2
+    PostFileUploadCompleteResponse:
+      type: object
+      properties:
+        successes:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                $ref: '../lincloud.yml#/components/schemas/ContentFilenameRegex'
+              version:
+                type: string
+        failures:
+          type: array
+          items:
+            $ref: '../lincloud.yml#/components/schemas/ContentFilenameRegex'
+        conflictedFileContents:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileContent'
+      example:
+        successes:
+          - name: artboard.json
+            version: version2
+        failures:
+          - artboard1.json
+          - media.dat
+        conflictedFileContents:
+          - id: 97dbee6a-270f-4bda-963a-623dc90695e8
+            name: artboard1.json
+            size: 1
+            status: FAILED
+            version: version1
+    FileConflictResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          name:
+            $ref: '../lincloud.yml#/components/schemas/ContentFilenameRegex'
+          versions:
+            type: array
+            items:
+              type: string
+

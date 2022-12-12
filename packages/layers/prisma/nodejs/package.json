@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "name": "@layers/prisma",
+  "description": "prisma database layer",
+  "private": true,
+  "scripts": {
+    "prisma": "prisma",
+    "migrate:dev": "prisma migrate dev --schema=./schema.prisma"
+  },
+  "dependencies": {
+    "@prisma/client": "4.6.1"
+  },
+  "devDependencies": {
+    "prisma": "4.6.1"
+  }
+}
